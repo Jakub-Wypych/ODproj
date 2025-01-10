@@ -39,6 +39,7 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username VARCHAR(32),
             note TEXT,
+            fingerprint TEXT,
             FOREIGN KEY (username) REFERENCES user(username)
         );
     """)

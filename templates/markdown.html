@@ -2,6 +2,7 @@
 <body>
 <h1> Your rendered Markdown: </h1>
 {{ rendered | safe }}
+<p><strong>Fingerprint:</strong> {{ fingerprint }}</p>
 <br>
 <form action={{ url_for('hello') }}>
   <input type="submit" value="Go back" />
