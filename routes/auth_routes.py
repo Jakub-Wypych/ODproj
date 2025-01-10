@@ -6,9 +6,11 @@ from passlib.hash import sha256_crypt
 from database import get_db
 from database.auth import load_user
 from datetime import datetime, timedelta
+import time
 
 MAX_FAILED_ATTEMPTS = 5  # Maksymalna liczba nieudanych prób logowania
-LOCK_TIME = timedelta(minutes=1)  # Czas blokady konta po przekroczeniu liczby prób (15 minut)
+LOCK_TIME = timedelta(minutes=1)  # Czas blokady konta po przekroczeniu liczby prób
+TIME = 1 # opóźnienie w logowaniu
 
 def setup_auth_routes(app, login_manager):
     @login_manager.user_loader
@@ -22,6 +24,8 @@ def setup_auth_routes(app, login_manager):
 
     @app.route("/", methods=["GET", "POST"])
     def login():
+        time.sleep(TIME)
+
         ip_address = request.remote_addr  # Pobieranie adresu IP użytkownika
 
         # Sprawdzamy, czy adres IP jest zablokowany
