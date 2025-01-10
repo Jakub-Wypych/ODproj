@@ -1,7 +1,7 @@
 # app.py
 from flask import Flask
 from flask_login import LoginManager
-from routes import setup_auth_routes, setup_notes_routes
+from routes import setup_auth_routes, setup_notes_routes, setup_register_routes
 from database import init_db
 
 app = Flask(__name__)
@@ -15,7 +15,8 @@ login_manager.init_app(app)
 init_db()
 
 # Setup routes
-setup_auth_routes(app, login_manager)  # Trasy logowania i rejestracji
+setup_auth_routes(app, login_manager)  # Trasy logowania
+setup_register_routes(app) # Trasy rejestracji
 setup_notes_routes(app)  # Trasy związane z notatkami
 
 if __name__ == "__main__":
