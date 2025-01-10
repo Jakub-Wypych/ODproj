@@ -1,10 +1,16 @@
+# routes/register_routes.py
+import base64
+
+import pyotp
+import qrcode
 from flask import render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user
+from flask_login import login_user
 from passlib.hash import sha256_crypt
 from database import get_db
 from database.auth import load_user
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
+from io import BytesIO
 
 def setup_register_routes(app):
     @app.route("/register", methods=["GET", "POST"])
@@ -40,8 +46,6 @@ def setup_register_routes(app):
                 return redirect(url_for('register'))
 
             # Sprawdzamy, czy użytkownik już istnieje
-            db = get_db()
-            sql = db.cursor()
             sql.execute("SELECT username FROM user WHERE username = ?", (username,))
             if sql.fetchone():
                 flash("Użytkownik o takim loginie już istnieje", "danger")
@@ -49,14 +53,32 @@ def setup_register_routes(app):
 
             # Haszujemy hasło i zapisujemy nowego użytkownika
             hashed_password = sha256_crypt.hash(password)
-            sql.execute("INSERT INTO user (username, password) VALUES (?, ?)", (username, hashed_password))
+
+            # Tworzymy sekret do 2FA
+            totp = pyotp.TOTP(pyotp.random_base32())
+            two_factor_secret = totp.secret
+
+            sql.execute("INSERT INTO user (username, password, two_factor_secret) VALUES (?, ?, ?)",
+                        (username, hashed_password, two_factor_secret))
             db.commit()
 
             # Logujemy nowego użytkownika
             user = load_user(username)
             login_user(user)
             flash("Rejestracja zakończona sukcesem!", "success")
-            return redirect(url_for('hello'))
+
+            # Generujemy kod QR do Google Authenticator
+            uri = totp.provisioning_uri(name=username, issuer_name="Twoje Aplikacja")
+            img = qrcode.make(uri)
+
+            # Zapisujemy QR kod w pamięci
+            img_io = BytesIO()
+            img.save(img_io)
+            img_io.seek(0)
+
+            img_base64 = base64.b64encode(img_io.read()).decode('utf-8')
+
+            return render_template("two_factor_setup.html", image=img_base64)
 
         return render_template("register.html")
 

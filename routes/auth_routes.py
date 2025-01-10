@@ -1,3 +1,5 @@
+# auth_routes.py
+import pyotp
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user
 from passlib.hash import sha256_crypt
@@ -40,6 +42,9 @@ def setup_auth_routes(app, login_manager):
             user = load_user(username)
 
             if user and sha256_crypt.verify(password, user.password):
+                if(verify_2fa() == 0):
+                    flash("Nieprawidłowy kod 2FA", "danger")
+                    return redirect(url_for('login'))
                 login_user(user)
                 reset_failed_attempts(ip_address)  # Resetujemy liczbę prób po udanym logowaniu
                 return redirect(url_for('hello'))
@@ -51,6 +56,28 @@ def setup_auth_routes(app, login_manager):
             return redirect(url_for('login'))
 
         return render_template("index.html")
+
+    def verify_2fa():
+        username = request.form.get("username")
+        two_factor_secret = request.form.get("two_factor_secret")
+
+        # Wczytujemy użytkownika z bazy danych
+        db = get_db()
+        sql = db.cursor()
+        sql.execute("SELECT two_factor_secret FROM user WHERE username = ?", (username,))
+        user = sql.fetchone()
+
+        if user and user["two_factor_secret"]:
+            totp = pyotp.TOTP(user["two_factor_secret"])
+
+            # Sprawdzamy, czy kod 2FA jest poprawny
+            if totp.verify(two_factor_secret):
+                return 1
+            else:
+                return 0
+
+        flash("Nie znaleziono użytkownika lub 2FA jest wyłączone", "danger")
+        return redirect(url_for('login'))
 
     @app.route("/logout")
     def logout():

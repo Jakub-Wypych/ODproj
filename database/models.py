@@ -20,7 +20,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS user (
             username VARCHAR(32) PRIMARY KEY,
             password VARCHAR(128) NOT NULL,
-            secret VARCHAR(128)  -- Sekretny klucz do 2FA
+            two_factor_secret TEXT  -- Sekretny klucz do 2FA
         );
     """)
 
