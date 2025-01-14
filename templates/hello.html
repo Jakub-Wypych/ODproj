@@ -30,6 +30,20 @@
         {% else %}
             <span>(Private)</span>
         {% endif %}
+
+        <!-- Dodanie informacji o udostępnieniu notatki -->
+        {% if note.3 %}
+            <span>(Shared)</span>
+        {% else %}
+            <span>(Not Shared)</span>
+        {% endif %}
+
+        <!-- Dodanie informacji o zabezpieczeniu hasłem -->
+        {% if note.4 %}
+            <span>(Password Protected)</span>
+        {% else %}
+            <span>(No Password)</span>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>
@@ -37,10 +51,17 @@
 <p>No notes found.</p>
 {% endif %}
 
-
-
 <form action={{ url_for('logout') }}>
   <input type="submit" value="Log out" />
 </form>
+{% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul>
+            {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
 </body>
 </html>

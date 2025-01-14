@@ -13,7 +13,7 @@ def init_db():
 
     #sql.execute("DROP TABLE IF EXISTS user")
     #sql.execute("DROP TABLE IF EXISTS notes")
-    sql.execute("DROP TABLE IF EXISTS login_attempts")
+    #sql.execute("DROP TABLE IF EXISTS login_attempts")
 
     # Tworzenie tabeli użytkowników
     sql.execute("""
@@ -33,6 +33,7 @@ def init_db():
             fingerprint TEXT,
             is_encrypted BOOLEAN DEFAULT 0,
             is_public BOOLEAN DEFAULT 0,
+            is_shared BOOLEAN DEFAULT 0,
             FOREIGN KEY (username) REFERENCES user(username)
         );
     """)
