@@ -6,17 +6,28 @@
   <label for="markdown">Input some markdown:</label><br>
   <textarea id="markdown" name="markdown" rows="20" cols="100"></textarea>
   <br>
+  <label for="password_enc">Password: </label>
+  <input type="text" id="password_enc" name="password_enc"><br>
+  <label for="is_public">Make this note public:</label>
+  <input type="checkbox" id="is_public" name="is_public" value="1"><br>
   <input type="submit" value="Submit">
 </form>
 
 {% if notes|length > 0 %}
-<h1> Your notes: </h1>
+<h1>Your Notes:</h1>
 <ul>
-{% for note in notes %}
-  <li><a href="{{ url_for('render') }}/{{note.0}}"> Note {{ loop.index }}</a></li>
-{% endfor %}
+    {% for note in notes %}
+    <li>
+        <form action="{{ url_for('render_old', rendered_id=note.0) }}" method="POST" style="display: inline;">
+            <label for="password_{{ loop.index }}">Note {{ loop.index }}: </label>
+            <input type="password" id="password_{{ loop.index }}" name="password" placeholder="Enter password if required">
+            <button type="submit">View</button>
+        </form>
+    </li>
+    {% endfor %}
 </ul>
-
+{% else %}
+<p>No notes found.</p>
 {% endif %}
 
 

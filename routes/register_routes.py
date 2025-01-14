@@ -11,10 +11,15 @@ from database.auth import load_user
 import re
 from datetime import datetime
 from io import BytesIO
+import time
+
+TIME = 1 # opóźnienie
 
 def setup_register_routes(app):
     @app.route("/register", methods=["GET", "POST"])
     def register():
+        time.sleep(TIME)
+
         ip_address = request.remote_addr  # Pobranie adresu IP użytkownika
         db = get_db()
         sql = db.cursor()

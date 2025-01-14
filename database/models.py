@@ -11,7 +11,7 @@ def init_db():
     db = get_db()
     sql = db.cursor()
 
-    sql.execute("DROP TABLE IF EXISTS user")
+    #sql.execute("DROP TABLE IF EXISTS user")
     sql.execute("DROP TABLE IF EXISTS notes")
     sql.execute("DROP TABLE IF EXISTS login_attempts")
 
@@ -24,15 +24,6 @@ def init_db():
         );
     """)
 
-    # Tworzenie tabeli login_attempts
-    sql.execute("""
-        CREATE TABLE IF NOT EXISTS login_attempts (
-            ip_address TEXT PRIMARY KEY,
-            attempts INTEGER,
-            lock_until DATETIME
-        );
-    """)
-
     # Tworzenie tabeli notatek
     sql.execute("""
         CREATE TABLE IF NOT EXISTS notes (
@@ -40,7 +31,18 @@ def init_db():
             username VARCHAR(32),
             note TEXT,
             fingerprint TEXT,
+            is_encrypted BOOLEAN DEFAULT 0,
+            is_public BOOLEAN DEFAULT 0,
             FOREIGN KEY (username) REFERENCES user(username)
+        );
+    """)
+
+    # Tworzenie tabeli login_attempts
+    sql.execute("""
+        CREATE TABLE IF NOT EXISTS login_attempts (
+            ip_address TEXT PRIMARY KEY,
+            attempts INTEGER,
+            lock_until DATETIME
         );
     """)
 

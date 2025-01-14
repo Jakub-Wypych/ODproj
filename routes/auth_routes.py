@@ -46,9 +46,11 @@ def setup_auth_routes(app, login_manager):
             user = load_user(username)
 
             if user and sha256_crypt.verify(password, user.password):
+                """"
                 if(verify_2fa() == 0):
                     flash("Nieprawidłowy kod 2FA", "danger")
                     return redirect(url_for('login'))
+                """
                 login_user(user)
                 reset_failed_attempts(ip_address)  # Resetujemy liczbę prób po udanym logowaniu
                 return redirect(url_for('hello'))
