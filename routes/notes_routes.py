@@ -13,8 +13,13 @@ def setup_notes_routes(app):
         username = current_user.id
         db = get_db()
         sql = db.cursor()
-        sql.execute("SELECT id FROM notes WHERE username = ?", (username,))
+        sql.execute("""
+                SELECT id, note, is_public, username 
+                FROM notes 
+                WHERE username = ? OR is_public = 1
+            """, (username,))
         notes = sql.fetchall()
+
         db.close()
         return render_template("hello.html", username=username, notes=notes)
 
@@ -23,6 +28,7 @@ def setup_notes_routes(app):
     def render():
         md = request.form.get("markdown", "")
         password = request.form.get("password_enc", "")
+        is_public = request.form.get("is_public", "0") == "1"
 
         # Renderowanie Markdown
         rendered = markdown.markdown(md, extensions=['extra', 'fenced_code'])
@@ -47,7 +53,7 @@ def setup_notes_routes(app):
             isencrypted = True
         db = get_db()
         sql = db.cursor()
-        sql.execute("INSERT INTO notes (username, note, fingerprint, is_encrypted) VALUES (?, ?, ?, ?)", (username, cleaned_rendered, fingerprint, isencrypted))
+        sql.execute("INSERT INTO notes (username, note, fingerprint, is_encrypted, is_public) VALUES (?, ?, ?, ?, ?)", (username, cleaned_rendered, fingerprint, isencrypted, is_public))
         db.commit()
         db.close()
         return render_template("markdown.html", rendered=cleaned_rendered, fingerprint=fingerprint)
@@ -63,16 +69,18 @@ def setup_notes_routes(app):
         password = request.form.get("password", "")  # Pobranie hasła z formularza
         db = get_db()
         sql = db.cursor()
-        sql.execute("SELECT username, note, fingerprint, is_encrypted FROM notes WHERE id = ?", (rendered_id,))
+        sql.execute("SELECT username, note, fingerprint, is_encrypted, is_public FROM notes WHERE id = ?", (rendered_id,))
         row = sql.fetchone()
         db.close()
 
         if row:
-            username, rendered, fingerprint, isencrypted = row
-            if username != current_user.id:
-                return "Access to note forbidden", 403
+            username, rendered, fingerprint, isencrypted, ispublic = row
+            if not ispublic:
+                if username != current_user.id:
+                    return "Access to note forbidden", 403
             if isencrypted:
-                rendered = decrypt_note(rendered, password)
+                if password:
+                    rendered = decrypt_note(rendered, password)
             # Oczyszczanie starej notatki
             cleaned_rendered = bleach.clean(rendered,
                                             tags=['b', 'i', 'u', 'em', 'strong', 'a', 'img', 'h1', 'h2', 'h3',

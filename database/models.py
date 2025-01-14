@@ -12,7 +12,7 @@ def init_db():
     sql = db.cursor()
 
     #sql.execute("DROP TABLE IF EXISTS user")
-    sql.execute("DROP TABLE IF EXISTS notes")
+    #sql.execute("DROP TABLE IF EXISTS notes")
     sql.execute("DROP TABLE IF EXISTS login_attempts")
 
     # Tworzenie tabeli użytkowników

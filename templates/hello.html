@@ -19,16 +19,24 @@
     {% for note in notes %}
     <li>
         <form action="{{ url_for('render_old', rendered_id=note.0) }}" method="POST" style="display: inline;">
-            <label for="password_{{ loop.index }}">Note {{ loop.index }}: </label>
+            <label for="password_{{ loop.index }}">Note {{ loop.index }}:</label>
             <input type="password" id="password_{{ loop.index }}" name="password" placeholder="Enter password if required">
             <button type="submit">View</button>
         </form>
+
+        <!-- Dodanie informacji o publiczności notatki -->
+        {% if note.2 %}
+            <span>(Public)</span>
+        {% else %}
+            <span>(Private)</span>
+        {% endif %}
     </li>
     {% endfor %}
 </ul>
 {% else %}
 <p>No notes found.</p>
 {% endif %}
+
 
 
 <form action={{ url_for('logout') }}>
