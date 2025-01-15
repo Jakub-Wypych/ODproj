@@ -34,6 +34,7 @@ def init_db():
             is_encrypted BOOLEAN DEFAULT 0,
             is_public BOOLEAN DEFAULT 0,
             is_shared BOOLEAN DEFAULT 0,
+            author TEXT,
             FOREIGN KEY (username) REFERENCES user(username)
         );
     """)

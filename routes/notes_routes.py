@@ -53,12 +53,12 @@ def setup_notes_routes(app):
             isencrypted = True
         db = get_db()
         sql = db.cursor()
-        sql.execute("INSERT INTO notes (username, note, fingerprint, is_encrypted, is_public) VALUES (?, ?, ?, ?, ?)", (username, cleaned_rendered, fingerprint, isencrypted, is_public))
+        sql.execute("INSERT INTO notes (username, note, fingerprint, is_encrypted, is_public, author) VALUES (?, ?, ?, ?, ?, ?)", (username, cleaned_rendered, fingerprint, isencrypted, is_public, username))
         db.commit()
         # Uzyskanie ID ostatnio wstawionej notatki
         note_id = sql.lastrowid
         db.close()
-        return render_template("markdown.html", rendered=cleaned_rendered, fingerprint=fingerprint, note_id=note_id)
+        return render_template("markdown.html", rendered=cleaned_rendered, fingerprint=fingerprint, note_id=note_id, author=username)
 
     def generate_fingerprint(content, username):
         """Generuje unikalny fingerprint na podstawie treści i nazwy użytkownika."""
@@ -71,12 +71,12 @@ def setup_notes_routes(app):
         password = request.form.get("password", "")  # Pobranie hasła z formularza
         db = get_db()
         sql = db.cursor()
-        sql.execute("SELECT username, note, fingerprint, is_encrypted, is_public FROM notes WHERE id = ?", (rendered_id,))
+        sql.execute("SELECT username, note, fingerprint, is_encrypted, is_public, author FROM notes WHERE id = ?", (rendered_id,))
         row = sql.fetchone()
         db.close()
 
         if row:
-            username, rendered, fingerprint, isencrypted, ispublic = row
+            username, rendered, fingerprint, isencrypted, ispublic, author = row
             if not ispublic:
                 if username != current_user.id:
                     return "Access to note forbidden", 403
@@ -92,7 +92,7 @@ def setup_notes_routes(app):
                                                         'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'code'],
                                             attributes={'a': ['href', 'title'],
                                                         'img': ['src', 'alt', 'width', 'height']})
-            return render_template("markdown.html", rendered=cleaned_rendered, fingerprint=fingerprint, note_id=rendered_id)
+            return render_template("markdown.html", rendered=cleaned_rendered, fingerprint=fingerprint, note_id=rendered_id, author=author)
 
         return "Note not found", 404
 
@@ -102,12 +102,12 @@ def setup_notes_routes(app):
         db = get_db()
         sql = db.cursor()
 
-        # Sprawdzamy, czy notatka należy do obecnego użytkownika
-        sql.execute("SELECT username, is_public FROM notes WHERE id = ?", (note_id,))
+        sql.execute("SELECT username, is_public, fingerprint FROM notes WHERE id = ?", (note_id,))
         row = sql.fetchone()
         if row:
             note_owner = row['username']
             is_public = row['is_public']
+            fingerprint = row['fingerprint']
 
             if note_owner != current_user.id:
                 flash("Nie masz dostępu do tej notatki", "danger")
@@ -117,6 +117,9 @@ def setup_notes_routes(app):
             if is_public:
                 flash("Notatka jest publiczna, więc nie może być udostępniona", "danger")
                 return redirect(url_for('hello'))
+        else:
+            flash("Notatka nie istnieje", "danger")
+            return redirect(url_for('hello'))
 
         # Sprawdzamy, czy użytkownik podał nazwę użytkownika, któremu chce udostępnić notatkę
         shared_with_user = request.form.get("shared_with_user")
@@ -130,25 +133,24 @@ def setup_notes_routes(app):
             flash("Użytkownik nie istnieje", "danger")
             return redirect(url_for('hello'))
 
-        # Tworzymy kopię notatki i przypisujemy ją do nowego użytkownika
-        sql.execute("SELECT note, fingerprint, is_encrypted FROM notes WHERE id = ?", (note_id,))
-        note_data = sql.fetchone()
-
-        if note_data:
-            new_note = note_data['note']
-            fingerprint = note_data['fingerprint']
-            is_encrypted = note_data['is_encrypted']
-
-            # Tworzymy nową notatkę dla udostępnionego użytkownika
-            sql.execute(
-                "INSERT INTO notes (username, note, fingerprint, is_encrypted, is_public, is_shared) VALUES (?, ?, ?, ?, ?, ?)",
-                (shared_with_user, new_note, fingerprint, is_encrypted, 0, 1))  # 'is_public' = 0, 'is_shared' = 1
-            db.commit()
-
-            flash("Notatka została udostępniona", "success")
+        # Sprawdzamy, czy użytkownik już posiada notatkę o tym samym fingerprint
+        sql.execute("""
+            SELECT id FROM notes 
+            WHERE username = ? AND fingerprint = ?
+        """, (shared_with_user, fingerprint))
+        if sql.fetchone():
+            flash("Użytkownik już posiada taką samą notatkę", "danger")
             return redirect(url_for('hello'))
 
-        flash("Nie znaleziono notatki", "danger")
+        # Tworzymy kopię notatki dla udostępnionego użytkownika
+        sql.execute("""
+            INSERT INTO notes (username, note, fingerprint, is_encrypted, is_public, is_shared, author)
+            SELECT ?, note, fingerprint, is_encrypted, 0, 1, author
+            FROM notes WHERE id = ?
+        """, (shared_with_user, note_id))
+        db.commit()
+
+        flash("Notatka została udostępniona", "success")
         return redirect(url_for('hello'))
 
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
