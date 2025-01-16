@@ -10,6 +10,6 @@ Markdown~=3.7
 
 bleach~=6.2.0
 
-qrcode~=8.0
+qrcode[pil]
 
 cryptography
