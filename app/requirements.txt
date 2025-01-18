@@ -13,3 +13,7 @@ bleach~=6.2.0
 qrcode[pil]
 
 cryptography
+
+Flask-Talisman
+
+Flask-WTF

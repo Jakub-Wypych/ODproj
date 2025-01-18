@@ -1,5 +1,6 @@
 # app.py
-from flask import Flask, Talisman
+from flask import Flask
+from flask_talisman import Talisman
 from flask_login import LoginManager
 from routes import setup_auth_routes, setup_notes_routes, setup_register_routes
 from database import init_db
