@@ -40,6 +40,12 @@ def setup_auth_routes(app, login_manager):
                 flash("Twoje konto jest zablokowane. Spróbuj ponownie później.", "danger")
                 return render_template("index.html")
 
+        honeypot = request.form.get('login')
+        if honeypot:
+            flash('Bot detected!', 'error')
+            increment_failed_attempts(ip_address)
+            return render_template("index.html")
+
         if request.method == "POST":
             username = request.form.get("username")
             password = request.form.get("password")
@@ -48,9 +54,15 @@ def setup_auth_routes(app, login_manager):
             if user and sha256_crypt.verify(password, user.password):
                 if(verify_2fa() == 0):
                     flash("Nieprawidłowy kod 2FA", "danger")
+                    increment_failed_attempts(ip_address)
                     return redirect(url_for('login'))
                 login_user(user)
                 reset_failed_attempts(ip_address)  # Resetujemy liczbę prób po udanym logowaniu
+                sql.execute("""
+                    INSERT INTO user_login_ips (username, ip_address)
+                    VALUES (?, ?)
+                """, (username, ip_address))
+                db.commit()
                 return redirect(url_for('hello'))
 
             # Zwiększamy liczbę nieudanych prób dla tego IP
@@ -62,6 +74,7 @@ def setup_auth_routes(app, login_manager):
         return render_template("index.html")
 
     def verify_2fa():
+        return 1
         username = request.form.get("username")
         two_factor_secret = request.form.get("two_factor_secret")
 

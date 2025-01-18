@@ -5,6 +5,10 @@ from flask_login import login_required, current_user
 from database.models import get_db
 import markdown
 import bleach
+import time
+
+TIME = 1 # opóźnienie
+
 
 def setup_notes_routes(app):
     @app.route("/hello", methods=["GET"])
@@ -20,8 +24,17 @@ def setup_notes_routes(app):
                 """, (username,))
         notes = sql.fetchall()
 
+        sql.execute("""
+                    SELECT ip_address, login_time
+                    FROM user_login_ips
+                    WHERE username = ?
+                    ORDER BY login_time DESC
+                """, (username,))
+
+        ip_list = sql.fetchall()
+
         db.close()
-        return render_template("hello.html", username=username, notes=notes)
+        return render_template("hello.html", username=username, notes=notes, ip_list=ip_list)
 
     @app.route("/render", methods=["POST"])
     @login_required
@@ -99,6 +112,7 @@ def setup_notes_routes(app):
     @app.route("/share_note/<int:note_id>", methods=["POST"])
     @login_required
     def share_note(note_id):
+        time.sleep(TIME)
         db = get_db()
         sql = db.cursor()
 

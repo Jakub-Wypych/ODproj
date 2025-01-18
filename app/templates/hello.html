@@ -54,6 +54,23 @@
 <form action={{ url_for('logout') }}>
   <input type="submit" value="Log out" />
 </form>
+<h1>Adresy IP które logowały się na konto:</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Adres IP</th>
+                <th>Czas logowania</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ip, time in ip_list %}
+            <tr>
+                <td>{{ ip }}</td>
+                <td>{{ time }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <ul>

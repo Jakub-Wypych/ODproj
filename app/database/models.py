@@ -14,6 +14,7 @@ def init_db():
     #sql.execute("DROP TABLE IF EXISTS user")
     #sql.execute("DROP TABLE IF EXISTS notes")
     #sql.execute("DROP TABLE IF EXISTS login_attempts")
+    #sql.execute("DROP TABLE IF EXISTS user_login_ips")
 
     # Tworzenie tabeli użytkowników
     sql.execute("""
@@ -45,6 +46,17 @@ def init_db():
             ip_address TEXT PRIMARY KEY,
             attempts INTEGER,
             lock_until DATETIME
+        );
+    """)
+
+    # Tworzenie tabeli log ips
+    sql.execute("""
+        CREATE TABLE IF NOT EXISTS user_login_ips (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username VARCHAR(32) NOT NULL,
+            ip_address VARCHAR(45) NOT NULL,
+            login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES user(username)
         );
     """)
 
