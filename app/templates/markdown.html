@@ -8,7 +8,6 @@
 <!-- Formularz do udostępniania notatki -->
 <h2>Share this note</h2>
 <form action="{{ url_for('share_note', note_id=note_id) }}" method="POST">
-    {{ csrf_token() }}
     <label for="shared_with_user">Share with user:</label>
     <input type="text" id="shared_with_user" name="shared_with_user" placeholder="Enter username">
     <button type="submit">Share</button>

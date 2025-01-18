@@ -15,5 +15,3 @@ qrcode[pil]
 cryptography
 
 Flask-Talisman
-
-Flask-WTF
