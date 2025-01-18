@@ -4,7 +4,6 @@ from flask_talisman import Talisman
 from flask_login import LoginManager
 from routes import setup_auth_routes, setup_notes_routes, setup_register_routes
 from database import init_db
-from flask_wtf.csrf import CSRFProtect
 
 app = Flask(__name__)
 app.secret_key = "206363ef77d567cc511df5098695d2b85058952afd5e2b1eecd5aed981805e60"
@@ -20,7 +19,6 @@ csp = {
 }
 
 Talisman(app, content_security_policy=csp)
-csrf = CSRFProtect(app)
 
 # Login manager setup
 login_manager = LoginManager()
