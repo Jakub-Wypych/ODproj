@@ -74,7 +74,6 @@ def setup_auth_routes(app, login_manager):
         return render_template("index.html")
 
     def verify_2fa():
-        return 1
         username = request.form.get("username")
         two_factor_secret = request.form.get("two_factor_secret")
 
